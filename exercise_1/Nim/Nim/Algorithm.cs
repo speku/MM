@@ -43,10 +43,10 @@ namespace Nim
         private static IEnumerable<ImmutableList<int>> NextStates(ImmutableList<int> currentState)
         {
             return
-                currentState.Zip(Enumerable.Range(0, currentState.Count()), (n, i) => new { n, i }).                                // attach indices: [3,2,1] => [(3,0),(2,1),(1,2)] 
-                Select(ni => new { i = ni.i, ns = ni.n > 0 ? Enumerable.Range(0, ni.n - 1) : Enumerable.Empty<int>() }).            // for each heap, create all possible future heap sizes: [(0,[2,1,0]),(1,[1,0]),(2,[0])] the first element in the tuple is the index within the outer list
-                SelectMany(ins => ins.ns.Select(_n => currentState.RemoveAt(ins.i).Insert(ins.i, _n)));                             // for each possible future heap size of each heap, create the next state with only the size of the particular heap altered. Then, flatten the list to remove one level of nesting: [[2,2,1],[1,2,1],[0,2,1],[3,1,1],[3,0,1],[3,2,0]]
-
+                currentState.Zip(Enumerable.Range(0, currentState.Count()), (heapSize, index) => new { heapSize, index }).                                                                              // attach indices: [3,2,1] => [(3,0),(2,1),(1,2)] 
+                Where(heapSizeIndex => heapSizeIndex.heapSize != 0).                                                                                                                                    // filter out empty heaps since they can't be modified in order to create a new state
+                Select(heapSizeIndex => new { index = heapSizeIndex.index, nextSizes = Enumerable.Range(0, heapSizeIndex.heapSize)}).                                                                   // for each heap, create all possible future heap sizes: [(0,[2,1,0]),(1,[1,0]),(2,[0])] the first element in the tuple is the index within the outer list
+                SelectMany(indecesHeapSizes => indecesHeapSizes.nextSizes.Select(nextSize => currentState.RemoveAt(indecesHeapSizes.index).Insert(indecesHeapSizes.index, nextSize)));                  // for each possible future heap size of each heap, create the next state with only the size of the particular heap altered. Then, flatten the list to remove one level of nesting: [[2,2,1],[1,2,1],[0,2,1],[3,1,1],[3,0,1],[3,2,0]]
         }
 
 
@@ -60,7 +60,7 @@ namespace Nim
             return 
                 Transpose(ToBinary(state)).                 // transform a state to its binary representation and transpose the resulting matrix: [3,2,1] => [[1,1],[1,0],[0,1]] => [[1,1,0],[1,0,1]]
                 Select(nimParts => nimParts.Sum()).         // calculate the nim sums for each transposed row: [[1,1,0],[1,0,1]] => [2,2]
-                All(s => s % 2 == 0);                       // return true, if all sums are even
+                All(nimSum => nimSum % 2 == 0);             // return true, if all sums are even
         }
 
 

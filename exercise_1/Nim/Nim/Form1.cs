@@ -31,7 +31,7 @@ namespace Nim
                 var buttons = new List<Tuple<Tuple<int,int>,Button>>();
                 splitContainer1.Panel2.Controls.Clear();
 
-                var heaps = textBox1.Text.Trim().Split(' ').Select(s => int.Parse(s));
+                var heaps = textBox1.Text.Trim().Split(' ').Select(stringHeapSize => int.Parse(stringHeapSize)).Where(heapSize => heapSize > 0);
 
                 var table = new TableLayoutPanel();
                 table.AutoSize = true;
