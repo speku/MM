@@ -45,23 +45,41 @@ namespace Nim
                     ForEach(tp => removeButtons(tp));
                 Func<ImmutableList<int>> currentState = () => buttons.GroupBy(tpb => tpb.Item1.Item2).
                                     Select(tpbs => tpbs.Where(tpb => table.Controls.Contains(tpb.Item2)).Count()).ToImmutableList();
-
+                Func<ImmutableList<int>, bool> winningState = state => state.All(n => n == 0);
+                Func<bool, string, bool> isGameOver = (won, who) =>
+                {
+                    if (won)
+                    {
+                        splitContainer1.Panel2.Controls.Clear();
+                        var l = new Label();
+                        l.Text = who + " " + "won!";
+                        splitContainer1.Panel2.Controls.Add(l);
+                    }
+                    return won;
+                };
 
                 heaps.
-                        Zip(Enumerable.Range(0, heaps.Count()), (n, i) => new { n, i }).
-                        SelectMany(ni => Enumerable.Range(0, ni.n).
-                        Select(m => Tuple.Create(m, ni.i))).ToList().ForEach(mi =>
+                    Zip(Enumerable.Range(0, heaps.Count()), (n, i) => new { n, i }).
+                    SelectMany(ni => Enumerable.Range(0, ni.n).
+                    Select(m => Tuple.Create(m, ni.i))).ToList().ForEach(mi =>
+                    {
+                        var b = new Button();
+                        b.Size = new Size(40, 30);
+                        buttons.Add(Tuple.Create(mi, b));
+                        b.Click += (object o, EventArgs args) =>
                         {
-                            var b = new Button();
-                            b.Size = new Size(40, 30);
-                            buttons.Add(Tuple.Create(mi, b));
-                            b.Click += (object o, EventArgs args) =>
+                            removeButtons(mi);
+                            var cs = currentState();
+                            if (!isGameOver(winningState(cs), "you"))
                             {
-                                removeButtons(mi);
-                                renderState(Algorithm.NextState(currentState()));
-                            };
-                            table.Controls.Add(b, mi.Item1, mi.Item2);
-                        });
+                                renderState(Algorithm.NextState(cs));
+                                isGameOver(winningState(currentState()), "computer");
+                            }
+
+                                
+                        };
+                        table.Controls.Add(b, mi.Item1, mi.Item2);
+                    });
 
                 textBox1.BackColor = Color.Green;
             } catch

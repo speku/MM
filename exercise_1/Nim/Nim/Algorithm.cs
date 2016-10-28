@@ -17,7 +17,21 @@ namespace Nim
         /// <returns></returns>
         public static IEnumerable<int> NextState(ImmutableList<int> currentState)
         {
-            return NextStates(currentState).Where(nextState => EvenNimSum(nextState)).FirstOrDefault();     // generate all possible next states and filter them for evenness of their nim sums. Then return the first acceptable state.
+            return NextStates(currentState).Where(nextState => EvenNimSum(nextState)).FirstOrDefault() ?? NonWinningState(currentState);  // generate all possible next states and filter them for evenness of their nim sums. Then return the first acceptable state. If no winning position can be achieved, return a state with a non-empty heap removed.
+        }
+
+
+        /// <summary>
+        /// Produces a potentially non-winning state
+        /// </summary>
+        /// <param name="currentState"></param>
+        /// <returns></returns>
+        private static IEnumerable<int> NonWinningState(ImmutableList<int> currentState)
+        {
+            var iNonEmptyHeap = currentState.FindIndex(n => n > 0);                                            // find first non-empty heap
+            var nonWinningState = currentState.RemoveAt(iNonEmptyHeap).Insert(iNonEmptyHeap, 0);               // remove the heap (replace its heap size with 0)
+            Console.WriteLine("Non Winning State of [" + String.Join(",", nonWinningState) + "]");
+            return nonWinningState;
         }
 
 
@@ -29,9 +43,9 @@ namespace Nim
         private static IEnumerable<ImmutableList<int>> NextStates(ImmutableList<int> currentState)
         {
             return
-                currentState.Zip(Enumerable.Range(0, currentState.Count()), (n, i) => new { n, i }).          // attach indices: [3,2,1] => [(3,0),(2,1),(1,2)] 
-                Select(ni => new { i = ni.i, ns = Enumerable.Range(0, ni.n - 1) }).                           // for each heap, create all possible future heap sizes: [(0,[2,1,0]),(1,[1,0]),(2,[0])] the first element in the tuple is the index within the outer list
-                SelectMany(ins => ins.ns.Select(_n => currentState.RemoveAt(ins.i).Insert(ins.i, _n)));       // for each possible future heap size of each heap, create the next state with only the size of the particular heap altered. Then, flatten the list to remove one level of nesting: [[2,2,1],[1,2,1],[0,2,1],[3,1,1],[3,0,1],[3,2,0]]
+                currentState.Zip(Enumerable.Range(0, currentState.Count()), (n, i) => new { n, i }).                                // attach indices: [3,2,1] => [(3,0),(2,1),(1,2)] 
+                Select(ni => new { i = ni.i, ns = ni.n > 0 ? Enumerable.Range(0, ni.n - 1) : Enumerable.Empty<int>() }).            // for each heap, create all possible future heap sizes: [(0,[2,1,0]),(1,[1,0]),(2,[0])] the first element in the tuple is the index within the outer list
+                SelectMany(ins => ins.ns.Select(_n => currentState.RemoveAt(ins.i).Insert(ins.i, _n)));                             // for each possible future heap size of each heap, create the next state with only the size of the particular heap altered. Then, flatten the list to remove one level of nesting: [[2,2,1],[1,2,1],[0,2,1],[3,1,1],[3,0,1],[3,2,0]]
 
         }
 
@@ -69,6 +83,7 @@ namespace Nim
                 });
         }
 
+
         /// <summary>
         /// Transposes a matrix (changes up columns and rows)
         /// </summary>
@@ -83,8 +98,6 @@ namespace Nim
                 GroupBy(columnElement => columnElement.Item1).                                                                      // group items by their column-index
                 Select(columnElementList => columnElementList.Select(columnElement => columnElement.Item2));                        // remove indeces
         }
-
-
 
 
 
