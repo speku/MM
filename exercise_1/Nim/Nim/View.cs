@@ -24,14 +24,18 @@ namespace Nim
 
         }
 
+
         private void button1_Click(object sender, EventArgs e)
         {
+
+            // since this part only concerns the GUI, I've ommitted most comments
+
             try
             {
                 var buttons = new List<Tuple<Tuple<int,int>,Button>>();
                 splitContainer1.Panel2.Controls.Clear();
 
-                var heaps = textBox1.Text.Trim().Split(' ').Select(stringHeapSize => int.Parse(stringHeapSize)).Where(heapSize => heapSize > 0);
+                var heaps = textBox1.Text.Trim().Split(' ').Select(stringHeapSize => int.Parse(stringHeapSize)).Where(heapSize => heapSize > 0); // parsing the input
 
                 var table = new TableLayoutPanel();
                 table.AutoSize = true;
@@ -39,6 +43,9 @@ namespace Nim
                 table.ColumnCount = heaps.Max();
                 splitContainer1.Panel2.Controls.Add(table);
 
+                // some ugliness incoming...
+
+                // local function definitions
                 Action<Tuple<int, int>> removeButtons = tp => buttons.Where(tpb => tpb.Item1.Item2 == tp.Item2 && tpb.Item1.Item1 >= tp.Item1).ToList().
                     ForEach(_tpb => table.Controls.Remove(_tpb.Item2));
                 Action<IEnumerable<int>> renderState = state => state.Zip(Enumerable.Range(0, state.Count()), (n, i) => Tuple.Create(n, i)).ToList().
@@ -81,7 +88,7 @@ namespace Nim
                         table.Controls.Add(b, mi.Item1, mi.Item2);
                     });
 
-                textBox1.BackColor = Color.Green;
+                textBox1.BackColor = Color.White;
             } catch
             {
                 splitContainer1.Panel2.Controls.Clear();
