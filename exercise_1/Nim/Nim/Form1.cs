@@ -28,7 +28,7 @@ namespace Nim
         {
             try
             {
-                var buttons = new List<Button>();
+                var buttons = new List<Tuple<Tuple<int,int>,Button>>();
                 splitContainer1.Panel2.Controls.Clear();
 
                 var heaps = textBox1.Text.Trim().Split(' ').Select(s => int.Parse(s));
@@ -39,7 +39,13 @@ namespace Nim
                 table.ColumnCount = heaps.Max();
                 splitContainer1.Panel2.Controls.Add(table);
 
-                Action<Tuple<int,int>> removeButtons = tp => buttons.Where(bb => ((Tuple<int, int>)bb.Tag).Item2 == tp.Item2 && ((Tuple<int, int>)bb.Tag).Item1 >= tp.Item1).ToList().ForEach(bbb => { table.Controls.Remove(bbb); buttons.Remove(bbb); });
+                Action<Tuple<int, int>> removeButtons = tp => buttons.Where(tpb => tpb.Item1.Item2 == tp.Item2 && tpb.Item1.Item1 >= tp.Item1).ToList().
+                    ForEach(_tpb => table.Controls.Remove(_tpb.Item2));
+                Action<IEnumerable<int>> renderState = state => state.Zip(Enumerable.Range(0, state.Count()), (n, i) => Tuple.Create(n, i)).ToList().
+                    ForEach(tp => removeButtons(tp));
+                Func<ImmutableList<int>> currentState = () => buttons.GroupBy(tpb => tpb.Item1.Item2).
+                                    Select(tpbs => tpbs.Where(tpb => table.Controls.Contains(tpb.Item2)).Count()).ToImmutableList();
+
 
                 heaps.
                         Zip(Enumerable.Range(0, heaps.Count()), (n, i) => new { n, i }).
@@ -47,13 +53,12 @@ namespace Nim
                         Select(m => Tuple.Create(m, ni.i))).ToList().ForEach(mi =>
                         {
                             var b = new Button();
-                            b.Tag = mi;
                             b.Size = new Size(40, 30);
-                            buttons.Add(b);
+                            buttons.Add(Tuple.Create(mi, b));
                             b.Click += (object o, EventArgs args) =>
                             {
                                 removeButtons(mi);
-                                removeButtons(Algorithm.NextState(buttons.Select(bb => bb.Tag).Cast<Tuple<int, int>>().GroupBy(tp => tp.Item2).Select(tps => tps.Count()).Where(n => n != 0).ToImmutableList()));
+                                renderState(Algorithm.NextState(currentState()));
                             };
                             table.Controls.Add(b, mi.Item1, mi.Item2);
                         });
