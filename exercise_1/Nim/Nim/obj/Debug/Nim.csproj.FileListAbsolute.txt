@@ -7,3 +7,14 @@ c:\users\speku\documents\visual studio 2015\Projects\Nim\Nim\obj\Debug\Nim.Prope
 c:\users\speku\documents\visual studio 2015\Projects\Nim\Nim\obj\Debug\Nim.csproj.GenerateResource.Cache
 c:\users\speku\documents\visual studio 2015\Projects\Nim\Nim\obj\Debug\Nim.exe
 c:\users\speku\documents\visual studio 2015\Projects\Nim\Nim\obj\Debug\Nim.pdb
+C:\Users\speku\Documents\MM\exercise_1\Nim\Nim\bin\Debug\Nim.exe.config
+C:\Users\speku\Documents\MM\exercise_1\Nim\Nim\bin\Debug\Nim.exe
+C:\Users\speku\Documents\MM\exercise_1\Nim\Nim\bin\Debug\Nim.pdb
+C:\Users\speku\Documents\MM\exercise_1\Nim\Nim\bin\Debug\System.Collections.Immutable.dll
+C:\Users\speku\Documents\MM\exercise_1\Nim\Nim\bin\Debug\System.Collections.Immutable.xml
+C:\Users\speku\Documents\MM\exercise_1\Nim\Nim\obj\Debug\Nim.csprojResolveAssemblyReference.cache
+C:\Users\speku\Documents\MM\exercise_1\Nim\Nim\obj\Debug\Nim.Main.resources
+C:\Users\speku\Documents\MM\exercise_1\Nim\Nim\obj\Debug\Nim.Properties.Resources.resources
+C:\Users\speku\Documents\MM\exercise_1\Nim\Nim\obj\Debug\Nim.csproj.GenerateResource.Cache
+C:\Users\speku\Documents\MM\exercise_1\Nim\Nim\obj\Debug\Nim.exe
+C:\Users\speku\Documents\MM\exercise_1\Nim\Nim\obj\Debug\Nim.pdb
