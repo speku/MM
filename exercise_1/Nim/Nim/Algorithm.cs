@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using static System.Linq.Enumerable;
 using System.Text;
 using System.Threading.Tasks;
 using System.Collections.Immutable;
@@ -25,7 +26,7 @@ namespace Nim
         /// <returns></returns>
         public static ImmutableList<int> NextState(ImmutableList<int> currentState)
         {
-            return NextStates(currentState).Where(nextState => EvenNimSum(nextState)).FirstOrDefault() ?? NonWinningState(currentState);  // generate all possible next states and filter them for evenness of their nim sums. Then return the first acceptable state. If no winning position can be achieved, return a state with a non-empty heap removed.
+            return NextStates(currentState).Where(EvenNimSum).FirstOrDefault() ?? RemoveHeap(currentState);  // generate all possible next states and filter them for evenness of their nim sums. Then return the first acceptable state. If no winning position can be achieved, return a state with a non-empty heap removed.
         }
 
 
@@ -34,9 +35,9 @@ namespace Nim
         /// </summary>
         /// <param name="currentState"></param>
         /// <returns></returns>
-        private static ImmutableList<int> NonWinningState(ImmutableList<int> currentState)
+        private static ImmutableList<int> RemoveHeap(ImmutableList<int> currentState)
         {
-            var iNonEmptyHeap = currentState.FindIndex(n => n > 0);                                            // find first non-empty heap
+            var iNonEmptyHeap = currentState.FindIndex(n => n > 0);                             // find first non-empty heap
             return currentState.RemoveAt(iNonEmptyHeap).Insert(iNonEmptyHeap, 0);               // remove the heap (replace its heap size with 0)
         }
 
@@ -49,10 +50,10 @@ namespace Nim
         private static IEnumerable<ImmutableList<int>> NextStates(ImmutableList<int> currentState)
         {
             return
-                currentState.Zip(Enumerable.Range(0, currentState.Count()), (heapSize, index) => new { heapSize, index }).                                                                              // attach indices: [3,2,1] => [(3,0),(2,1),(1,2)] 
-                Where(heapSizeIndex => heapSizeIndex.heapSize != 0).                                                                                                                                    // filter out empty heaps since they can't be modified in order to create a new state
-                Select(heapSizeIndex => new { index = heapSizeIndex.index, nextSizes = Enumerable.Range(0, heapSizeIndex.heapSize)}).                                                                   // for each heap, create all possible future heap sizes: [(0,[2,1,0]),(1,[1,0]),(2,[0])] the first element in the tuple is the index within the outer list
-                SelectMany(indecesHeapSizes => indecesHeapSizes.nextSizes.Select(nextSize => currentState.RemoveAt(indecesHeapSizes.index).Insert(indecesHeapSizes.index, nextSize)));                  // for each possible future heap size of each heap, create the next state with only the size of the particular heap altered. Then, flatten the list to remove one level of nesting: [[2,2,1],[1,2,1],[0,2,1],[3,1,1],[3,0,1],[3,2,0]]
+                currentState.Zip(Range(0, currentState.Count()), (heapSize, index) => new { heapSize, index }).                                                                              // attach indices: [3,2,1] => [(3,0),(2,1),(1,2)] 
+                Where(heapSizeIndex => heapSizeIndex.heapSize != 0).                                                                                                                         // filter out empty heaps since they can't be modified in order to create a new state
+                Select(heapSizeIndex => new { index = heapSizeIndex.index, nextSizes = Range(0, heapSizeIndex.heapSize)}).                                                                   // for each heap, create all possible future heap sizes: [(0,[2,1,0]),(1,[1,0]),(2,[0])] the first element in the tuple is the index within the outer list
+                SelectMany(indecesHeapSizes => indecesHeapSizes.nextSizes.Select(nextSize => currentState.RemoveAt(indecesHeapSizes.index).Insert(indecesHeapSizes.index, nextSize)));       // for each possible future heap size of each heap, create the next state with only the size of the particular heap altered. Then, flatten the list to remove one level of nesting: [[2,2,1],[1,2,1],[0,2,1],[3,1,1],[3,0,1],[3,2,0]]
         }
 
 
@@ -64,9 +65,20 @@ namespace Nim
         private static bool EvenNimSum(ImmutableList<int> state)
         {
             return 
-                Transpose(ToBinary(state)).                 // transform a state to its binary representation and transpose the resulting matrix: [3,2,1] => [[1,1],[1,0],[0,1]] => [[1,1,0],[1,0,1]]
-                Select(nimParts => nimParts.Sum()).         // calculate the nim sums for each transposed row: [[1,1,0],[1,0,1]] => [2,2]
-                All(nimSum => nimSum % 2 == 0);             // return true, if all sums are even
+                Transpose(BinaryMatrix(state)).                 // transform a state to its binary representation and transpose the resulting matrix: [3,2,1] => [[1,1],[1,0],[0,1]] => [[1,1,0],[1,0,1]]
+                Select(Enumerable.Sum).                         // calculate the nim sums for each transposed row: [[1,1,0],[1,0,1]] => [2,2]
+                All(Even);                                      // return true, if all sums are even
+        }
+
+
+        /// <summary>
+        /// Returns true if an integer is even
+        /// </summary>
+        /// <param name="n"></param>
+        /// <returns></returns>
+        private static bool Even(int n)
+        {
+            return n % 2 == 0;
         }
 
 
@@ -75,7 +87,7 @@ namespace Nim
         /// </summary>
         /// <param name="state"></param>
         /// <returns></returns>
-        private static IEnumerable<IEnumerable<int>> ToBinary(ImmutableList<int> state)
+        private static IEnumerable<IEnumerable<int>> BinaryMatrix(ImmutableList<int> state)
         {
             return
                 state.
@@ -99,10 +111,9 @@ namespace Nim
         {
             return
                 matrix.
-                Select(binaryList => binaryList.Zip(Enumerable.Range(0, 32), (element, index) => Tuple.Create(index, element))).    // attach column-indeces to each element
-                SelectMany(id => id).                                                                                               // flatten the list
-                GroupBy(columnElement => columnElement.Item1).                                                                      // group items by their column-index
-                Select(columnElementList => columnElementList.Select(columnElement => columnElement.Item2));                        // remove indeces
+                SelectMany(binaryList => binaryList.Zip(Range(0, 32), (element, index) => Tuple.Create(index, element))).    // attach column-indeces to each element and flatten the list                                                                                   // flatten the list
+                GroupBy(columnElement => columnElement.Item1).                                                                          // group items by their column-index
+                Select(columnElementList => columnElementList.Select(columnElement => columnElement.Item2));                            // remove indeces
         }
 
 
@@ -113,7 +124,7 @@ namespace Nim
         /// <returns></returns>
         public static bool Prove(params int[] heapSizes)
         {
-            return ProveCore(Enumerable.Repeat(heapSizes.ToImmutableList(), 1));
+            return ProveCore(Repeat(heapSizes.ToImmutableList(), 1));
         }
 
 
